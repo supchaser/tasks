@@ -1,12 +1,25 @@
 FROM golang:1.24-alpine AS builder
-WORKDIR /app
-COPY main.go .
-COPY go.mod .
-RUN go build -o /echo-server .
+LABEL stage=builder
+WORKDIR /src
 
-FROM alpine:latest
-WORKDIR /app
-COPY --from=builder /echo-server /app/echo-server
+RUN apk add --no-cache git
+
+COPY go.mod ./
+RUN go mod download
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-s -w" -o /echo-server ./cmd/main
+
+FROM scratch AS runtime
+
+LABEL maintainer="Valentin Stremin" \
+      org.opencontainers.image.source="https://github.com/supchaser/tasks" \
+      org.opencontainers.image.license="MIT"
+
+COPY --from=builder /echo-server /echo-server
+
+ENV AUTHOR="Unknown Author"
 EXPOSE 8000
-ENV AUTHOR="Valentin Stremin (supchaser)"
-CMD ["/app/echo-server"]
+
+ENTRYPOINT ["/echo-server"]

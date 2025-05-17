@@ -1,0 +1,71 @@
+---
+- name: Verify Task 2 – Docker CE, App Deploy & NGINX LB
+  hosts: web_vms
+  become: yes
+  gather_facts: yes
+
+  tasks:
+    - name: Проверить, что пакет docker-ce установлен
+      ansible.builtin.package_facts:
+
+    - name: Assert docker-ce is installed
+      ansible.builtin.assert:
+        that:
+          - "'docker-ce' in ansible_facts.packages"
+        fail_msg: "Пакет docker-ce не найден!"
+
+    - name: Проверить, что сервис Docker запущен
+      ansible.builtin.service_facts:
+
+    - name: Assert docker.service is running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['docker.service'].state == 'running'
+        fail_msg: "Сервис docker не запущен!"
+
+    - name: Получить список работающих контейнеров echo-server
+      ansible.builtin.shell: |
+        docker ps --filter "name=^{{ container_name }}_" --format "{{ '{{' }}.Names{{ '}}' }}"
+      register: running_containers
+      changed_when: false
+
+    - name: Assert exactly {{ replicas }} containers are running
+      ansible.builtin.assert:
+        that:
+          - running_containers.stdout_lines | length == replicas
+        fail_msg: "Ожидалось {{ replicas }} контейнера(ов), найдено {{ running_containers.stdout_lines | length }}"
+
+    - name: Проверить, что сервис nginx запущен
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: yes
+      check_mode: yes
+
+    - name: Проверить, что nginx слушает порт {{ nginx_listen_port }}
+      ansible.builtin.shell: ss -tln | grep ":{{ nginx_listen_port }} "
+      register: nginx_listen
+
+    - name: Assert nginx listening on {{ nginx_listen_port }}
+      ansible.builtin.assert:
+        that:
+          - nginx_listen.rc == 0
+        fail_msg: "NGINX не слушает порт {{ nginx_listen_port }}!"
+
+    - name: Запрос к nginx для проверки ответов приложения
+      ansible.builtin.uri:
+        url: "http://localhost:{{ nginx_listen_port }}"
+        return_content: yes
+      register: nginx_response
+
+    - name: Assert HTTP status is 200
+      ansible.builtin.assert:
+        that:
+          - nginx_response.status == 200
+        fail_msg: "NGINX ответил кодом {{ nginx_response.status }}, ожидался 200"
+
+    - name: Assert response contains AUTHOR
+      ansible.builtin.assert:
+        that:
+          - lookup('env', author_env_var) in nginx_response.content
+        fail_msg: "Ответ не содержит ожидаемой переменной окружения AUTHOR"

@@ -1,0 +1,24 @@
+---
+registry_url: docker.io
+
+image_name: supchaser/cloudru-camp-echo-server
+
+registry_username: supchaser
+registry_password: !vault |
+          $ANSIBLE_VAULT;1.1;AES256
+          31313564656532303132353466386363313966633036613662646632656634386365353034613030
+          6534396461626431376634373230356138636363323862620a366664656566386137366531323438
+          32393033396432326238323231306630343439623032313161373139323738306231383435633832
+          3861376331386339370a336234336330636361383863643836326134356335313865323165326136
+          3034
+
+image_tag: latest
+
+container_name: echo-server
+author_env_var: AUTHOR
+
+replicas: 3
+host_port_start: 8001
+
+nginx_upstream_name: echo_upstream
+nginx_listen_port: 80

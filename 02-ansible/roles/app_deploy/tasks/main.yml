@@ -1,0 +1,23 @@
+---
+- name: Логин в Docker Hub
+  community.docker.docker_login:
+    registry_url: "{{ registry_url }}"
+    username:    "{{ registry_username }}"
+    password:    "{{ registry_password }}"
+
+- name: Скачать образ приложения
+  community.docker.docker_image:
+    name:   "{{ image_name }}:{{ image_tag }}"
+    source: pull
+
+- name: Запустить контейнеры echo-app
+  community.docker.docker_container:
+    name:           "{{ container_name }}_{{ item }}"
+    image:          "{{ image_name }}:{{ image_tag }}"
+    env:
+      "{{ author_env_var }}": "{{ lookup('env', author_env_var) }}"
+    state:          started
+    restart_policy: always
+    published_ports:
+      - "{{ host_port_start + item }}:8000"
+  loop: "{{ range(0, replicas) | list }}"

@@ -1,0 +1,5 @@
+---
+nginx_upstream_name: echo_upstream
+replicas:            3
+host_port_start:     8001
+nginx_listen_port:   80

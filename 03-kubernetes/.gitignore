@@ -1,0 +1,7 @@
+secret.yaml
+
+echo-chart/charts/
+
+*.tgz
+
+echo-chart/values.*.yaml

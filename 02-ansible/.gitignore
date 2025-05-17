@@ -1,0 +1,11 @@
+.vagrant/
+
+*.retry
+
+inventory.*.ini
+hosts
+
+*.log
+
+*.swp
+*~

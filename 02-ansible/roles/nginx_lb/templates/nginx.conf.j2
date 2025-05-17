@@ -1,0 +1,21 @@
+user www-data;
+worker_processes auto;
+events { worker_connections 1024; }
+
+http {
+    upstream {{ nginx_upstream_name }} {
+        least_conn;
+{% for i in range(replicas) %}
+        server 127.0.0.1:{{ host_port_start + i }};
+{% endfor %}
+    }
+
+    server {
+        listen {{ nginx_listen_port }};
+        location / {
+            proxy_pass http://{{ nginx_upstream_name }};
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+    }
+}

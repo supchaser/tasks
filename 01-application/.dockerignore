@@ -1,0 +1,12 @@
+/echo-server
+
+*.exe
+*.test
+*.out
+
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+/vendor
