@@ -13,12 +13,8 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// 1) Импортируем embed и встраиваем все HTML-файлы из папки templates.
-//
-//go:embed templates/*.html
 var templateFS embed.FS
 
-// 2) Парсим шаблон из вшитого FS
 var tmpl = template.Must(
 	template.ParseFS(templateFS, "templates/index.html"),
 )
@@ -31,7 +27,6 @@ type PageData struct {
 	UserAgent string
 }
 
-// EchoHandler отдаёт страницу по /
 func EchoHandler(log *logrus.Logger, author string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		hostname, err := os.Hostname()
@@ -63,7 +58,6 @@ func EchoHandler(log *logrus.Logger, author string) http.HandlerFunc {
 	}
 }
 
-// HealthHandler отдаёт JSON по /healthz
 func HealthHandler(log *logrus.Logger) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

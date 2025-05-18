@@ -8,7 +8,7 @@ import (
 )
 
 type Config struct {
-	Port   string // номер порта без двоеточия, например "8000"
+	Port   string
 	Author string
 }
 
